@@ -160,9 +160,9 @@ class _CalculatorState extends State<Calculator> {
                       input[i] == "*" ||
                       input[i] == "/") &&
                   !(input[i - 1] == "+" ||
-                      input[i - 1] == "+" ||
-                      input[i - 1] == "+" ||
-                      input[i - 1] == "+")) {
+                      input[i - 1] == "-" ||
+                      input[i - 1] == "*" ||
+                      input[i - 1] == "/")) {
                 index = i;
                 break;
               }
