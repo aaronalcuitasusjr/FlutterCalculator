@@ -206,19 +206,22 @@ class _CalculatorState extends State<Calculator> {
           history.clear();
           break;
         case "=":
-          Parser p = Parser();
-          Expression exp = p.parse(input);
-          ContextModel cm = ContextModel();
-          double eval = exp.evaluate(EvaluationType.REAL, cm);
-          history.insert(0, "$input=$eval");
-          input = "$eval";
-          currNum = "$eval";
-          currOp = "";
+          if (input.substring(1).contains("+") ||
+              input.substring(1).contains("-") ||
+              input.substring(1).contains("*") ||
+              input.substring(1).contains("/")) {
+            Parser p = Parser();
+            Expression exp = p.parse(input);
+            ContextModel cm = ContextModel();
+            double eval = exp.evaluate(EvaluationType.REAL, cm);
+            history.insert(0, "$input=$eval");
+            input = "$eval";
+            currNum = "$eval";
+            currOp = "";
+          }
+
           break;
       }
-      print(input);
-      print(currNum);
-      print(currOp);
     });
   }
 
