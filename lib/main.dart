@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 import 'package:flutter_calculator/calc_button.dart';
 
 void main() {
@@ -30,9 +31,8 @@ class Calculator extends StatefulWidget {
 
 class _CalculatorState extends State<Calculator> {
   var input = "0";
-  var numOne = "0";
-  var numTwo = "";
-  var operator = "";
+  var currNum = "0";
+  var currOp = "";
   var history = <String>[];
 
   final List<String> buttons = [
@@ -93,106 +93,131 @@ class _CalculatorState extends State<Calculator> {
         case "8":
         case "9":
           if (input.length < 24) {
-            if (operator != "" && numTwo == "0") {
-              numTwo = txt;
-              input = "$numOne$operator$numTwo";
-            } else if (operator != "") {
-              input = "$input$txt";
-              numTwo = "$numTwo$txt";
-            } else if (numOne != "0" && operator == "") {
-              input = "$input$txt";
-              numOne = "$numOne$txt";
-            } else if (numOne == "0" && operator == "") {
+            if (input == "0" && currNum == "0") {
               input = txt;
-              numOne = txt;
+              currNum = txt;
+            } else if (currNum == "0") {
+              currNum = txt;
+              input = input.substring(0, input.length - 1);
+              input = "$input$currNum";
+              currOp = "";
+            } else if (currNum == "-0") {
+              currNum = "-$txt";
+              input = input.substring(0, input.length - 2);
+              input = "$input$currNum";
+              currOp = "";
+            } else if (currNum != "0") {
+              currNum = "$currNum$txt";
+              input = "$input$txt";
             }
           }
           break;
         case "±":
-          if ((numOne != "" && operator != "") &&
-              (numTwo != "" && !numTwo.startsWith("-"))) {
-            if (input.length < 24) {
-              numTwo = "-$numTwo";
-              input = "$numOne$operator$numTwo";
-            }
-          } else if ((numOne != "" && operator != "") && numTwo != "") {
-            numTwo = numTwo.substring(1);
-            input = "$numOne$operator$numTwo";
-          } else if ((numOne != "" && operator == "") &&
-              !numOne.startsWith("-")) {
-            if (input.length < 24) {
-              numOne = "-$numOne";
-              input = numOne;
-            }
-          } else if ((numOne != "" && operator == "")) {
-            numOne = numOne.substring(1);
-            input = numOne;
+          if (!currNum.contains("-")) {
+            input = input.substring(0, input.length - currNum.length);
+            currNum = "-$currNum";
+            input = "$input$currNum";
+          } else {
+            input = input.substring(0, input.length - currNum.length);
+            currNum = currNum.substring(1);
+            input = "$input$currNum";
           }
           break;
         case ".":
-          if ((operator == "" && numTwo == "") &&
-              (!numOne.contains(".") && input.length < 24)) {
+          if (input.length < 24 && !currNum.contains(".")) {
+            currNum = "$currNum$txt";
             input = "$input$txt";
-            numOne = "$numOne$txt";
-          } else if ((operator != "" && numTwo == "") && input.length < 23) {
-            input = "${input}0$txt";
-            numTwo = "0$txt";
-          } else if ((operator != "" && !numTwo.contains(".")) &&
-              (numTwo != "" && input.length < 24)) {
-            input = "$input$txt";
-            numTwo = "$numTwo$txt";
           }
           break;
         case "+":
         case "-":
         case "*":
         case "/":
-          if ((operator == "" && !numOne.endsWith(".")) && input.length < 24) {
-            input = "$input$txt";
-            operator = txt;
+          if (input.length < 23 && currOp == "") {
+            currOp = txt;
+            currNum = "0";
+            input = "$input$currOp$currNum";
+            currOp = "";
           }
           break;
         case "<":
-          if ((numOne != "" && operator != "") && numTwo != "") {
+          if (input.endsWith("+-0") ||
+              input.endsWith("--0") ||
+              input.endsWith("*-0") ||
+              input.endsWith("/-0")) {
+            input = input.substring(0, input.length - currNum.length);
+            currNum = "0";
+            input = "$input$currNum";
+          } else if (input.endsWith("+0") ||
+              input.endsWith("-0") ||
+              input.endsWith("*0") ||
+              input.endsWith("/0")) {
+            input = input.substring(0, input.length - 2);
+            var index = -1;
+            for (int i = input.length - 1; i > 0; i--) {
+              if ((input[i] == "+" ||
+                      input[i] == "-" ||
+                      input[i] == "*" ||
+                      input[i] == "/") &&
+                  !(input[i - 1] == "+" ||
+                      input[i - 1] == "+" ||
+                      input[i - 1] == "+" ||
+                      input[i - 1] == "+")) {
+                index = i;
+                break;
+              }
+            }
+            currNum = input.substring(index + 1);
+          } else if (input.length > 2) {
+            if (input[input.length - 2] == "+" ||
+                input[input.length - 2] == "-" ||
+                input[input.length - 2] == "*" ||
+                input[input.length - 2] == "/") {
+              input = input.substring(0, input.length - 2);
+              if (currNum.startsWith("-")) {
+                currNum = "-0";
+              } else {
+                currNum = "0";
+              }
+              input = "$input$currNum";
+            } else if (input != "" && currNum != "") {
+              input = input.substring(0, input.length - 1);
+              currNum = currNum.substring(0, currNum.length - 1);
+            }
+          } else if (input != "" && currNum != "") {
             input = input.substring(0, input.length - 1);
-            numTwo = numTwo.substring(0, numTwo.length - 1);
-          } else if (numOne != "" && operator != "") {
-            input = input.substring(0, input.length - 1);
-            operator = "";
-          } else if (numOne != "") {
-            input = input.substring(0, input.length - 1);
-            numOne = numOne.substring(0, numOne.length - 1);
-            if (numOne == "") {
+            currNum = currNum.substring(0, currNum.length - 1);
+            if (input == "") {
               input = "0";
-              numOne = "0";
+              currNum = "0";
             }
           }
           break;
         case "C":
           input = "0";
-          numOne = "0";
-          numTwo = "";
-          operator = "";
+          currNum = "0";
+          currOp = "";
           break;
         case "AC":
           input = "0";
-          numOne = "0";
-          numTwo = "";
-          operator = "";
+          currNum = "0";
+          currOp = "";
           history.clear();
           break;
         case "=":
-          if ((numOne != "" && operator != "") &&
-              (numTwo != "" && !numTwo.endsWith("."))) {
-            var answer = getAnswer(numOne, operator, numTwo);
-            history.insert(0, "$numOne $operator $numTwo = $answer");
-            numOne = answer;
-            input = answer;
-            numTwo = "";
-            operator = "";
-          }
+          Parser p = Parser();
+          Expression exp = p.parse(input);
+          ContextModel cm = ContextModel();
+          double eval = exp.evaluate(EvaluationType.REAL, cm);
+          history.insert(0, "$input=$eval");
+          input = "$eval";
+          currNum = "$eval";
+          currOp = "";
           break;
       }
+      print(input);
+      print(currNum);
+      print(currOp);
     });
   }
 
