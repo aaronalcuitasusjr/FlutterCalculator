@@ -173,10 +173,11 @@ class _CalculatorState extends State<Calculator> {
                 input[input.length - 2] == "-" ||
                 input[input.length - 2] == "*" ||
                 input[input.length - 2] == "/") {
-              input = input.substring(0, input.length - 2);
               if (currNum.startsWith("-")) {
+                input = input.substring(0, input.length - 2);
                 currNum = "-0";
               } else {
+                input = input.substring(0, input.length - 1);
                 currNum = "0";
               }
               input = "$input$currNum";
