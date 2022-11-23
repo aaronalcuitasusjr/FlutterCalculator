@@ -31,8 +31,8 @@ class Calculator extends StatefulWidget {
 
 class _CalculatorState extends State<Calculator> {
   var input = "0";
-  var currNum = "0";
-  var currOp = "";
+  var nums = <String>["0"];
+  var numOps = 0;
   var history = <String>[];
 
   final List<String> buttons = [
@@ -93,39 +93,51 @@ class _CalculatorState extends State<Calculator> {
         case "8":
         case "9":
           if (input.length < 24) {
-            if (input == "0" && currNum == "0") {
+            if (input == "0") {
+              nums[nums.length - 1] = txt;
               input = txt;
-              currNum = txt;
-            } else if (currNum == "0") {
-              currNum = txt;
+            } else if (input.endsWith("+") ||
+                (input.endsWith("-") &&
+                    !(input.endsWith("+-") ||
+                        input.endsWith("--") ||
+                        input.endsWith("*-") ||
+                        input.endsWith("/-"))) ||
+                input.endsWith("*") ||
+                input.endsWith("/")) {
+              nums[nums.length - 1] = txt;
+              input = "$input$txt";
+            } else if (nums[nums.length - 1] == "0") {
+              nums[nums.length - 1] = txt;
               input = input.substring(0, input.length - 1);
-              input = "$input$currNum";
-              currOp = "";
-            } else if (currNum == "-0") {
-              currNum = "-$txt";
-              input = input.substring(0, input.length - 2);
-              input = "$input$currNum";
-              currOp = "";
-            } else if (currNum != "0") {
-              currNum = "$currNum$txt";
+              input = "$input$txt";
+            } else {
+              var curr = nums[nums.length - 1];
+              nums[nums.length - 1] = "$curr$txt";
               input = "$input$txt";
             }
           }
           break;
         case "±":
-          if (!currNum.contains("-")) {
-            input = input.substring(0, input.length - currNum.length);
-            currNum = "-$currNum";
-            input = "$input$currNum";
-          } else {
-            input = input.substring(0, input.length - currNum.length);
-            currNum = currNum.substring(1);
-            input = "$input$currNum";
+          if (input.length < 24) {
+            if (nums[nums.length - 1].contains("-")) {
+              input = input.substring(
+                  0, input.length - nums[nums.length - 1].length);
+              nums[nums.length - 1] = nums[nums.length - 1].substring(1);
+              var curr = nums[nums.length - 1];
+              input = "$input$curr";
+            } else {
+              var curr = nums[nums.length - 1];
+              nums[nums.length - 1] = "-$curr";
+              input = input.substring(0, input.length - curr.length);
+              input = "$input-$curr";
+            }
           }
+
           break;
         case ".":
-          if (input.length < 24 && !currNum.contains(".")) {
-            currNum = "$currNum$txt";
+          if (input.length < 24 && !nums[nums.length - 1].contains(".")) {
+            var curr = nums[nums.length - 1];
+            nums[nums.length - 1] = "$curr$txt";
             input = "$input$txt";
           }
           break;
@@ -133,95 +145,67 @@ class _CalculatorState extends State<Calculator> {
         case "-":
         case "*":
         case "/":
-          if (input.length < 23 && currOp == "") {
-            currOp = txt;
-            currNum = "0";
-            input = "$input$currOp$currNum";
-            currOp = "";
+          if (input.length < 24 && nums[nums.length - 1] != "") {
+            numOps = numOps + 1;
+            input = "$input$txt";
+            nums.add("");
           }
           break;
         case "<":
-          if (input.endsWith("+-0") ||
-              input.endsWith("--0") ||
-              input.endsWith("*-0") ||
-              input.endsWith("/-0")) {
-            input = input.substring(0, input.length - currNum.length);
-            currNum = "0";
-            input = "$input$currNum";
-          } else if (input.endsWith("+0") ||
-              input.endsWith("-0") ||
-              input.endsWith("*0") ||
-              input.endsWith("/0")) {
-            input = input.substring(0, input.length - 2);
-            var index = -1;
-            for (int i = input.length - 1; i > 0; i--) {
-              if ((input[i] == "+" ||
-                      input[i] == "-" ||
-                      input[i] == "*" ||
-                      input[i] == "/") &&
-                  !(input[i - 1] == "+" ||
-                      input[i - 1] == "-" ||
-                      input[i - 1] == "*" ||
-                      input[i - 1] == "/")) {
-                index = i;
-                break;
-              }
-            }
-            currNum = input.substring(index + 1);
-          } else if (input.length > 2) {
-            if (input[input.length - 2] == "+" ||
-                input[input.length - 2] == "-" ||
-                input[input.length - 2] == "*" ||
-                input[input.length - 2] == "/") {
-              if (currNum.startsWith("-")) {
-                input = input.substring(0, input.length - 2);
-                currNum = "-0";
-              } else {
-                input = input.substring(0, input.length - 1);
-                currNum = "0";
-              }
-              input = "$input$currNum";
-            } else if (input != "" && currNum != "") {
-              input = input.substring(0, input.length - 1);
-              currNum = currNum.substring(0, currNum.length - 1);
-            }
-          } else if (input != "" && currNum != "") {
+          if (input.endsWith("+") ||
+              (input.endsWith("-") &&
+                  (!(input.endsWith("+-") ||
+                          input.endsWith("--") ||
+                          input.endsWith("*-") ||
+                          input.endsWith("/-")) &&
+                      nums.length > 1)) ||
+              input.endsWith("*") ||
+              input.endsWith("/")) {
+            nums.removeLast();
+            numOps = numOps - 1;
             input = input.substring(0, input.length - 1);
-            currNum = currNum.substring(0, currNum.length - 1);
+          } else {
+            nums[nums.length - 1] = nums[nums.length - 1]
+                .substring(0, nums[nums.length - 1].length - 1);
+            input = input.substring(0, input.length - 1);
             if (input == "") {
               input = "0";
-              currNum = "0";
+              nums[nums.length - 1] = "0";
             }
           }
           break;
         case "C":
           input = "0";
-          currNum = "0";
-          currOp = "";
+          numOps = 0;
+          nums.clear();
+          nums.add("0");
           break;
         case "AC":
           input = "0";
-          currNum = "0";
-          currOp = "";
+          numOps = 0;
+          nums.clear();
+          nums.add("0");
           history.clear();
           break;
         case "=":
-          if (input.substring(1).contains("+") ||
-              input.substring(1).contains("-") ||
-              input.substring(1).contains("*") ||
-              input.substring(1).contains("/")) {
+          if (numOps > 0) {
             Parser p = Parser();
             Expression exp = p.parse(input);
             ContextModel cm = ContextModel();
             double eval = exp.evaluate(EvaluationType.REAL, cm);
             history.insert(0, "$input=$eval");
             input = "$eval";
-            currNum = "$eval";
-            currOp = "";
+            numOps = 0;
+            nums.clear();
+            nums.add("$eval");
           }
-
           break;
       }
+      // print(numOps);
+      // print(input);
+      // for (var x in nums) {
+      //   print(x);
+      // }
     });
   }
 
